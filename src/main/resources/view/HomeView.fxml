@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <MenuBar fx:id="menu" prefHeight="25.0" VBox.vgrow="NEVER">
+      <menus>
+        <Menu fx:id="profile" text="Profile">
+          <items>
+            <MenuItem fx:id="viewProfile" text="View my profile" />
+            <MenuItem fx:id="updateProfile" text="Update my profile" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+
+    <Label fx:id="welcomeLabel" text="Welcome!" style="-fx-font-size: 16px; -fx-padding: 10;" />
+
+    <TableView fx:id="eventTable" prefHeight="500.0" prefWidth="800.0">
+      <columns>
+        <TableColumn fx:id="titleCol" text="Event" prefWidth="150" />
+        <TableColumn fx:id="venueCol" text="Venue" prefWidth="150" />
+        <TableColumn fx:id="dayCol" text="Day" prefWidth="75" />
+        <TableColumn fx:id="priceCol" text="Price (AUD)" prefWidth="100" />
+        <TableColumn fx:id="soldCol" text="Sold" prefWidth="75" />
+        <TableColumn fx:id="totalCol" text="Total" prefWidth="75" />
+        <TableColumn fx:id="remainingCol" text="Remaining" prefWidth="100" />
+      </columns>
+    </TableView>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+      <Button fx:id="addToCartBtn" text="Add to Cart" />
+      <Label text="Quantity:" />
+      <TextField fx:id="quantityField" prefWidth="50" />
+      <Button fx:id="updateCartBtn" text="Update Cart" />
+      <Button fx:id="removeFromCartBtn" text="Remove from Cart" />
+      <Button fx:id="viewCartBtn" text="View Cart" />
+      <Button fx:id="checkoutBtn" text="Checkout" />
+      <Button fx:id="viewOrdersBtn" text="View Orders" />
+      <Button fx:id="exportOrdersBtn" text="Export Orders" />
+    </HBox>
+    <Label fx:id="cartMessage" style="-fx-text-fill: red;" />
+  </children>
+</VBox>

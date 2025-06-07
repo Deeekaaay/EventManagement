@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <Label fx:id="welcomeLabel" text="Welcome, Admin!" style="-fx-font-size: 16px; -fx-padding: 10;" />
+    <TableView fx:id="eventTable" prefHeight="500.0" prefWidth="800.0">
+      <columns>
+        <TableColumn fx:id="titleCol" text="Event" prefWidth="150" />
+        <TableColumn fx:id="venueCol" text="Venue" prefWidth="150" />
+        <TableColumn fx:id="dayCol" text="Day" prefWidth="75" />
+        <TableColumn fx:id="priceCol" text="Price (AUD)" prefWidth="100" />
+        <TableColumn fx:id="soldCol" text="Sold" prefWidth="75" />
+        <TableColumn fx:id="totalCol" text="Total" prefWidth="75" />
+        <TableColumn fx:id="remainingCol" text="Remaining" prefWidth="100" />
+        <TableColumn fx:id="enableCol" text="Enabled" prefWidth="75" />
+      </columns>
+    </TableView>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+      <Button fx:id="addEventBtn" text="Add Event" />
+      <Button fx:id="deleteEventBtn" text="Delete Event" />
+      <Button fx:id="modifyEventBtn" text="Modify Event" />
+      <Button fx:id="enableEventBtn" text="Enable Event" />
+      <Button fx:id="disableEventBtn" text="Disable Event" />
+      <Button fx:id="viewOrdersBtn" text="View All Orders" />
+    </HBox>
+    <Label fx:id="adminMessage" style="-fx-text-fill: red;" />
+  </children>
+</VBox>
