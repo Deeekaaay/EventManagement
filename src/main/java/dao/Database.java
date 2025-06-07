@@ -5,36 +5,25 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Database class using the Singleton design pattern.
- * Ensures only one instance of the database connection exists throughout the application.
+ * Utility class for managing SQLite database connections.
+ * <p>
+ * Always returns a new connection for each call to getConnection().
+ * The caller is responsible for closing the connection after use.
+ * </p>
  */
-public class Database {
+public final class Database {
     private static final String DB_URL = "jdbc:sqlite:application.db";
-    private static Database instance; // Singleton instance
-    private Connection connection;
 
-    // Private constructor prevents instantiation from other classes
-    private Database() throws SQLException {
-        this.connection = DriverManager.getConnection(DB_URL);
-    }
+    // Private constructor to prevent instantiation
+    private Database() {}
 
     /**
-     * Returns the singleton instance of Database.
-     * @return Database instance
+     * Returns a new database connection.
+     *
+     * @return a new Connection to the SQLite database
      * @throws SQLException if a database access error occurs
      */
-    public static synchronized Database getInstance() throws SQLException {
-        if (instance == null || instance.getConnection().isClosed()) {
-            instance = new Database();
-        }
-        return instance;
-    }
-
-    /**
-     * Returns the single Connection object.
-     * @return Connection
-     */
-    public Connection getConnection() {
-        return connection;
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL);
     }
 }

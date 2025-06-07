@@ -4,13 +4,25 @@ import java.sql.*;
 import java.util.*;
 import model.Event;
 
+/**
+ * Implementation of the EventDao interface for event-related database operations.
+ * Handles CRUD operations and event queries.
+ */
 public class EventDaoImpl implements EventDao {
     private final Connection conn;
 
+    /**
+     * Constructs an EventDaoImpl with the given database connection.
+     * @param conn the database connection
+     */
     public EventDaoImpl(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * Retrieves all events from the database.
+     * @return a list of all events
+     */
     @Override
     public List<Event> getAllEvents() {
         List<Event> events = new ArrayList<>();
@@ -25,6 +37,9 @@ public class EventDaoImpl implements EventDao {
         return events;
     }
 
+    /**
+     * Maps a ResultSet row to an Event object.
+     */
     private Event mapRowToEvent(ResultSet rs) throws SQLException {
         return new Event(
             rs.getInt("event_id"),
@@ -38,6 +53,11 @@ public class EventDaoImpl implements EventDao {
         );
     }
 
+    /**
+     * Adds a new event to the database.
+     * @param event the event to add
+     * @throws Exception if the event already exists or a database error occurs
+     */
     @Override
     public void addEvent(Event event) throws Exception {
         if (eventExists(event)) throw new Exception("Duplicate event");
@@ -54,6 +74,11 @@ public class EventDaoImpl implements EventDao {
         }
     }
 
+    /**
+     * Updates an existing event in the database.
+     * @param event the event to update
+     * @throws Exception if the event already exists or a database error occurs
+     */
     @Override
     public void updateEvent(Event event) throws Exception {
         if (eventExists(event)) throw new Exception("Duplicate event");
@@ -71,6 +96,11 @@ public class EventDaoImpl implements EventDao {
         }
     }
 
+    /**
+     * Checks if an event already exists in the database (excluding itself by event_id).
+     * @param event the event to check
+     * @return true if the event exists, false otherwise
+     */
     @Override
     public boolean eventExists(Event event) throws Exception {
         String sql = "SELECT COUNT(*) FROM events WHERE title=? AND date=? AND location=? AND event_id != ?";
@@ -88,6 +118,10 @@ public class EventDaoImpl implements EventDao {
         return false;
     }
 
+    /**
+     * Retrieves all unique event titles from the database.
+     * @return a list of event titles
+     */
     @Override
     public List<String> getAllEventTitles() {
         List<String> titles = new ArrayList<>();
@@ -102,6 +136,11 @@ public class EventDaoImpl implements EventDao {
         return titles;
     }
 
+    /**
+     * Retrieves all events with the given title.
+     * @param title the event title
+     * @return a list of events with the specified title
+     */
     @Override
     public List<Event> getEventsByTitle(String title) {
         List<Event> events = new ArrayList<>();
@@ -119,6 +158,11 @@ public class EventDaoImpl implements EventDao {
         return events;
     }
 
+    /**
+     * Deletes an event by its ID.
+     * @param eventId the event ID
+     * @throws Exception if a database error occurs
+     */
     @Override
     public void deleteEvent(int eventId) throws Exception {
         String sql = "DELETE FROM events WHERE event_id=?";
@@ -128,6 +172,12 @@ public class EventDaoImpl implements EventDao {
         }
     }
 
+    /**
+     * Enables or disables an event by its ID.
+     * @param eventId the event ID
+     * @param enabled true to enable, false to disable
+     * @throws Exception if a database error occurs
+     */
     @Override
     public void setEventEnabled(int eventId, boolean enabled) throws Exception {
         String sql = "UPDATE events SET enabled=? WHERE event_id=?";
@@ -138,6 +188,11 @@ public class EventDaoImpl implements EventDao {
         }
     }
 
+    /**
+     * Retrieves an event by its ID.
+     * @param eventId the event ID
+     * @return the Event object if found, otherwise null
+     */
     @Override
     public Event getEventById(int eventId) {
         String sql = "SELECT * FROM events WHERE event_id = ?";

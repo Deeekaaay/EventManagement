@@ -80,3 +80,8 @@ Design Patterns Used
    - The `Database` class is implemented as a Singleton. This ensures that only one instance of the database connection manager exists throughout the application, preventing resource leaks and ensuring consistent access to the SQLite database.
    - Usage: All DAOs and the Model class access the database connection via `Database.getInstance().getConnection()`.
    - Benefits: Centralizes database connection management, avoids multiple simultaneous connections, and simplifies resource cleanup.
+
+3. **Event Creation Validation (Admin)**
+   - When adding a new event, the 'Day' field must be one of: Mon, Tue, Wed, Thu, Fri, Sat, Sun.
+   - You cannot add an event with the same title, day, and venue as an existing event.
+   - If you enter an invalid day or try to add a duplicate event, a validation message will be shown.

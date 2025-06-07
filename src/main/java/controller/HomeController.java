@@ -21,6 +21,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.fxml.FXMLLoader;
 
+/**
+ * Controller for the Home (user) dashboard.
+ * Handles event browsing, cart management, order viewing/export, and account actions for regular users.
+ */
 @SuppressWarnings({"unused", "unchecked"})
 public class HomeController {
     private Model model;
@@ -56,14 +60,21 @@ public class HomeController {
         // No-arg constructor for FXML loader
     }
 
+    /**
+     * Sets the stage and model for this controller, and initializes event handlers.
+     * @param parentStage The parent stage (not used directly).
+     * @param model The application model.
+     */
     public void setStageAndModel(Stage parentStage, Model model) {
         this.stage = new Stage();
         this.model = model;
         // Restore all event handlers and validation logic
         refreshView();
+        // Listen for event selection changes
         eventTable.getSelectionModel().selectedItemProperty().addListener((_, __, newValue) -> {
             selectedEvent = newValue;
         });
+        // Button actions
         addToCartBtn.setOnAction(_ -> handleAddToCart());
         updateCartBtn.setOnAction(_ -> handleUpdateCart());
         removeFromCartBtn.setOnAction(_ -> handleRemoveFromCart());
@@ -74,7 +85,9 @@ public class HomeController {
         viewOrdersMenu.setOnAction(_ -> handleViewOrders());
         exportOrdersMenu.setOnAction(_ -> handleExportOrders());
         logoutMenu.setOnAction(_ -> handleLogout());
+        // Disable checkout if cart is empty
         checkoutBtn.setDisable(model.getCart().getItems().isEmpty());
+        // Enable/disable remove button based on cart contents
         eventTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedEvent = newValue;
             if (selectedEvent == null || !model.getCart().getItems().containsKey(selectedEvent)) {
@@ -88,12 +101,12 @@ public class HomeController {
 
     /**
      * Refreshes the Home view with the current user's name and events from the model.
+     * Sets up table columns and loads event data.
      */
     public void refreshView() {
         if (model == null || model.getCurrentUser() == null) return;
         // Personal welcome
         welcomeLabel.setText("Welcome, " + model.getCurrentUser().getPreferredName() + "!");
-
         // Set up table columns (only once)
         titleCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getTitle()));
         venueCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getVenue()));
@@ -102,7 +115,6 @@ public class HomeController {
         soldCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getSold()));
         totalCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTotal()));
         remainingCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getRemaining()));
-
         // Load events from the model
         List<Event> events = model.getAllEvents(false);
         eventTable.setItems(FXCollections.observableArrayList(events));
@@ -110,9 +122,13 @@ public class HomeController {
 
     @FXML
     public void initialize() {
-        // Do not use model-dependent logic here
+        // Do not use model-dependent logic here; setup is done in setStageAndModel
     }
 
+    /**
+     * Handles adding the selected event to the cart with the specified quantity.
+     * Validates input and seat availability.
+     */
     private void handleAddToCart() {
         if (selectedEvent == null) {
             cartMessage.setText("Select an event first.");
@@ -144,6 +160,10 @@ public class HomeController {
         removeFromCartBtn.setDisable(!model.getCart().getItems().containsKey(selectedEvent));
     }
 
+    /**
+     * Handles updating the quantity of the selected event in the cart.
+     * Removes from cart if quantity is zero.
+     */
     private void handleUpdateCart() {
         if (selectedEvent == null) {
             cartMessage.setText("Select an event first.");
@@ -165,6 +185,9 @@ public class HomeController {
         removeFromCartBtn.setDisable(selectedEvent == null || !model.getCart().getItems().containsKey(selectedEvent));
     }
 
+    /**
+     * Handles removing the selected event from the cart.
+     */
     private void handleRemoveFromCart() {
         if (selectedEvent == null) {
             cartMessage.setText("Select an event first.");
@@ -176,6 +199,9 @@ public class HomeController {
         removeFromCartBtn.setDisable(true);
     }
 
+    /**
+     * Displays the current cart contents in an alert dialog.
+     */
     private void handleViewCart() {
         StringBuilder sb = new StringBuilder();
         model.getCart().getItems().forEach((event, qty) -> {
@@ -187,6 +213,9 @@ public class HomeController {
         alert.showAndWait();
     }
 
+    /**
+     * Handles the checkout process, including validation, confirmation, and order creation.
+     */
     private void handleCheckout() {
         if (model.getCart().getItems().isEmpty()) {
             cartMessage.setText("Cart is empty. Cannot checkout.");
@@ -260,6 +289,9 @@ public class HomeController {
         cartMessage.setText("Checkout successful! Payment confirmed. Order No: " + orderNumber);
     }
 
+    /**
+     * Displays the current user's order history in a popup window.
+     */
     private void handleViewOrders() {
         // Use DB-backed method to get only current user's orders
         List<Order> userOrders = model.getOrdersForCurrentUser();
@@ -315,6 +347,9 @@ public class HomeController {
         popup.showAndWait();
     }
 
+    /**
+     * Exports all orders to a user-selected text file.
+     */
     private void handleExportOrders() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Export Orders");
@@ -337,6 +372,9 @@ public class HomeController {
         }
     }
 
+    /**
+     * Handles password change for the current user.
+     */
     private void handleChangePassword() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setHeaderText("Change Password");
@@ -361,6 +399,9 @@ public class HomeController {
         }
     }
 
+    /**
+     * Logs out the current user and returns to the login screen.
+     */
     private void handleLogout() {
         // Close this window
         stage.close();
@@ -376,6 +417,9 @@ public class HomeController {
         }
     }
 
+    /**
+     * Parses the quantity from the quantityField. Returns -1 if invalid.
+     */
     private int parseQuantity() {
         try {
             return Integer.parseInt(quantityField.getText().trim());
@@ -384,6 +428,10 @@ public class HomeController {
         }
     }
 
+    /**
+     * Shows the Home view stage with the given root pane.
+     * @param root The root pane to display.
+     */
     public void showStage(Pane root) {
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
@@ -392,6 +440,9 @@ public class HomeController {
         stage.show();
     }
 
+    /**
+     * Gets the current day of week as a 3-letter string (e.g., "Mon").
+     */
     private String getTodayDayString() {
         java.time.DayOfWeek day = java.time.LocalDate.now().getDayOfWeek();
         switch (day) {
@@ -406,6 +457,11 @@ public class HomeController {
         }
     }
 
+    /**
+     * Returns the index of the given 3-letter day string (Mon=0, ..., Sun=6).
+     * @param day The day string.
+     * @return The index, or -1 if invalid.
+     */
     private int getDayIndex(String day) {
         switch (day) {
             case "Mon": return 0;

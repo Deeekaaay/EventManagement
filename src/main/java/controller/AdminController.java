@@ -3,21 +3,34 @@ package controller;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.stage.Stage;
 import model.Model;
 import model.Event;
-import javafx.stage.Stage;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
+/**
+ * Controller for the Admin Dashboard.
+ * Handles event management, order viewing, and admin account actions.
+ */
 public class AdminController {
-    private Model model;
-    private Stage stage;
+    private final Model model;
+    private final Stage stage;
 
     @FXML private Label welcomeLabel;
     @FXML private TableView<Event> eventTable;
@@ -36,8 +49,6 @@ public class AdminController {
     @FXML private Button disableEventBtn;
     @FXML private Button viewOrdersBtn;
     @FXML private Label adminMessage;
-    @FXML private MenuBar adminMenuBar;
-    @FXML private Menu adminAccountMenu;
     @FXML private MenuItem adminChangePasswordMenu;
     @FXML private MenuItem adminLogoutMenu;
 
@@ -50,12 +61,25 @@ public class AdminController {
 
     @FXML
     public void initialize() {
-        if (model.getCurrentUser() != null && model.getCurrentUser().getRole() != null && model.getCurrentUser().getRole().equals("admin")) {
+        if (model.getCurrentUser() != null && "admin".equals(model.getCurrentUser().getRole())) {
             welcomeLabel.setText("Welcome, Admin!");
         } else {
             welcomeLabel.setText("Welcome!");
         }
-        // Set up table columns
+        setupTableColumns();
+        eventTable.setItems(getGroupedEvents());
+        eventTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> selectedEvent = newSel);
+        addEventBtn.setOnAction(_ -> handleAddEvent());
+        deleteEventBtn.setOnAction(_ -> handleDeleteEvent());
+        modifyEventBtn.setOnAction(_ -> handleModifyEvent());
+        enableEventBtn.setOnAction(_ -> handleEnableEvent());
+        disableEventBtn.setOnAction(_ -> handleDisableEvent());
+        viewOrdersBtn.setOnAction(_ -> handleViewOrders());
+        adminChangePasswordMenu.setOnAction(_ -> handleAdminChangePassword());
+        adminLogoutMenu.setOnAction(_ -> handleAdminLogout());
+    }
+
+    private void setupTableColumns() {
         titleCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getTitle()));
         venueCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getVenue()));
         dayCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getDay()));
@@ -64,32 +88,16 @@ public class AdminController {
         totalCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTotal()));
         remainingCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getRemaining()));
         enableCol.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().isEnabled()));
-        // Load grouped events
-        eventTable.setItems(getGroupedEvents());
-        eventTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            selectedEvent = newSel;
-        });
-        addEventBtn.setOnAction(e -> handleAddEvent());
-        deleteEventBtn.setOnAction(e -> handleDeleteEvent());
-        modifyEventBtn.setOnAction(e -> handleModifyEvent());
-        enableEventBtn.setOnAction(e -> handleEnableEvent());
-        disableEventBtn.setOnAction(e -> handleDisableEvent());
-        viewOrdersBtn.setOnAction(e -> handleViewOrders());
-        adminChangePasswordMenu.setOnAction(e -> handleAdminChangePassword());
-        adminLogoutMenu.setOnAction(e -> handleAdminLogout());
     }
 
     private ObservableList<Event> getGroupedEvents() {
-        List<Event> all = model.getAllEvents(true); // true = include disabled
-        ObservableList<Event> result = FXCollections.observableArrayList();
-        result.addAll(all);
-        return result;
+        List<Event> all = model.getAllEvents(true);
+        return FXCollections.observableArrayList(all);
     }
 
     private void handleAddEvent() {
-        // Show dialog to add event
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setHeaderText("Add New Event (format: Title;Day;Venue;Price;TotalSeats;AvailableSeats)");
+        dialog.setHeaderText("Add New Event (format: Title;Venue;Day;Price;TotalSeats;AvailableSeats)");
         dialog.setContentText("Enter details:");
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
@@ -100,12 +108,26 @@ public class AdminController {
             }
             try {
                 String title = parts[0].trim();
-                String day = parts[1].trim();
-                String venue = parts[2].trim();
+                String day = parts[2].trim();
+                String venue = parts[1].trim();
                 double price = Double.parseDouble(parts[3].trim());
                 int total = Integer.parseInt(parts[4].trim());
                 int available = Integer.parseInt(parts[5].trim());
                 boolean enabled = true;
+                // Validate day field
+                if (!day.matches("Mon|Tue|Wed|Thu|Fri|Sat|Sun")) {
+                    adminMessage.setText("Day must be one of: Mon, Tue, Wed, Thu, Fri, Sat, Sun.");
+                    return;
+                }
+                // Prevent duplicate event (same day, title, and venue)
+                boolean duplicate = model.getAllEvents(true).stream()
+                    .anyMatch(e -> e.getTitle().equalsIgnoreCase(title)
+                        && e.getDay().equalsIgnoreCase(day)
+                        && e.getVenue().equalsIgnoreCase(venue));
+                if (duplicate) {
+                    adminMessage.setText("An event with the same title, day, and venue already exists.");
+                    return;
+                }
                 Event event = new Event(title, day, venue, price, total, available, enabled);
                 if (model.eventExists(event)) {
                     adminMessage.setText("Duplicate event detected.");
@@ -146,13 +168,13 @@ public class AdminController {
         }
         TextInputDialog dialog = new TextInputDialog(
             selectedEvent.getTitle() + ";" +
-            selectedEvent.getDay() + ";" +
             selectedEvent.getVenue() + ";" +
+            selectedEvent.getDay() + ";" +
             selectedEvent.getPrice() + ";" +
             selectedEvent.getTotal() + ";" +
             selectedEvent.getAvailableSeats()
         );
-        dialog.setHeaderText("Modify Event (format: Title;Day;Venue;Price;TotalSeats;AvailableSeats)");
+        dialog.setHeaderText("Modify Event (format: Title;Venue;Day;Price;TotalSeats;AvailableSeats)");
         dialog.setContentText("Edit details:");
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
@@ -163,13 +185,28 @@ public class AdminController {
             }
             try {
                 String title = parts[0].trim();
-                String day = parts[1].trim();
-                String venue = parts[2].trim();
+                String venue = parts[1].trim();
+                String day = parts[2].trim();
                 double price = Double.parseDouble(parts[3].trim());
                 int total = Integer.parseInt(parts[4].trim());
                 int available = Integer.parseInt(parts[5].trim());
                 if (total < 0 || available < 0 || available > total) {
                     adminMessage.setText("Invalid seat numbers.");
+                    return;
+                }
+                // Validate day field
+                if (!day.matches("Mon|Tue|Wed|Thu|Fri|Sat|Sun")) {
+                    adminMessage.setText("Day must be one of: Mon, Tue, Wed, Thu, Fri, Sat, Sun.");
+                    return;
+                }
+                // Prevent duplicate event (same day, title, and venue, but not itself)
+                boolean duplicate = model.getAllEvents(true).stream()
+                    .anyMatch(e -> e.getEventId() != selectedEvent.getEventId()
+                        && e.getTitle().equalsIgnoreCase(title)
+                        && e.getDay().equalsIgnoreCase(day)
+                        && e.getVenue().equalsIgnoreCase(venue));
+                if (duplicate) {
+                    adminMessage.setText("An event with the same title, day, and venue already exists.");
                     return;
                 }
                 Event updated = new Event(
@@ -224,7 +261,6 @@ public class AdminController {
     }
 
     private void handleViewOrders() {
-        // Show all orders for all users in a TableView inside a popup
         List<model.Order> orders = model.getOrders();
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle("All Orders");
@@ -242,7 +278,6 @@ public class AdminController {
         orderTable.getColumns().addAll(orderNoCol, dateCol, totalCol, customerCol);
         orderTable.setItems(FXCollections.observableArrayList(orders));
 
-        // Table for order items
         TableView<model.OrderItem> itemTable = new TableView<>();
         TableColumn<model.OrderItem, String> eventCol = new TableColumn<>("Event");
         eventCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getEvent().getTitle()));
@@ -256,7 +291,7 @@ public class AdminController {
 
         Label selectedOrderLabel = new Label();
         selectedOrderLabel.setStyle("-fx-font-weight: bold; -fx-padding: 5 0 5 0;");
-        orderTable.getSelectionModel().selectedItemProperty().addListener((_, __, newSel) -> {
+        orderTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newSel) -> {
             if (newSel != null) {
                 itemTable.setItems(FXCollections.observableArrayList(newSel.getItems()));
                 selectedOrderLabel.setText("Order Items for Order No: " + newSel.getOrderNumber());
