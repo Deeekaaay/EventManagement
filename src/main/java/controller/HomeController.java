@@ -2,14 +2,13 @@ package controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.FXCollections;
-import javafx.scene.Scene;
-import javafx.stage.FileChooser;
+import javafx.scene.layout.*;
+import javafx.stage.*;
+import javafx.beans.property.*;
+import javafx.collections.*;
+import javafx.scene.*;
 import java.util.List;
+import java.util.Optional;
 import model.Event;
 import model.Model;
 import model.Order;
@@ -20,6 +19,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.Label;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.fxml.FXMLLoader;
 
 @SuppressWarnings({"unused", "unchecked"})
 public class HomeController {
@@ -44,6 +44,11 @@ public class HomeController {
     @FXML private Label cartMessage;
     @FXML private Button viewOrdersBtn;
     @FXML private Button exportOrdersBtn;
+    @FXML private Button changePasswordBtn;
+    @FXML private MenuItem changePasswordMenu;
+    @FXML private MenuItem viewOrdersMenu;
+    @FXML private MenuItem exportOrdersMenu;
+    @FXML private MenuItem logoutMenu;
 
     private Event selectedEvent;
 
@@ -64,8 +69,11 @@ public class HomeController {
         removeFromCartBtn.setOnAction(_ -> handleRemoveFromCart());
         viewCartBtn.setOnAction(_ -> handleViewCart());
         checkoutBtn.setOnAction(_ -> handleCheckout());
-        viewOrdersBtn.setOnAction(_ -> handleViewOrders());
-        exportOrdersBtn.setOnAction(_ -> handleExportOrders());
+        // Menu actions
+        changePasswordMenu.setOnAction(_ -> handleChangePassword());
+        viewOrdersMenu.setOnAction(_ -> handleViewOrders());
+        exportOrdersMenu.setOnAction(_ -> handleExportOrders());
+        logoutMenu.setOnAction(_ -> handleLogout());
         checkoutBtn.setDisable(model.getCart().getItems().isEmpty());
         eventTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedEvent = newValue;
@@ -329,6 +337,45 @@ public class HomeController {
         }
     }
 
+    private void handleChangePassword() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setHeaderText("Change Password");
+        dialog.setContentText("Enter new password:");
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            String newPassword = result.get().trim();
+            if (newPassword.isEmpty()) {
+                cartMessage.setText("Password cannot be empty.");
+                return;
+            }
+            try {
+                boolean changed = model.getUserDao().changePassword(model.getCurrentUser().getUsername(), newPassword);
+                if (changed) {
+                    cartMessage.setText("Password changed successfully. Please use the new password next time.");
+                } else {
+                    cartMessage.setText("Failed to change password.");
+                }
+            } catch (Exception e) {
+                cartMessage.setText("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    private void handleLogout() {
+        // Close this window
+        stage.close();
+        // Show the login window again
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
+            LoginController loginController = new LoginController(new Stage(), model);
+            loader.setController(loginController);
+            Pane root = loader.load();
+            loginController.showStage(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private int parseQuantity() {
         try {
             return Integer.parseInt(quantityField.getText().trim());
@@ -340,7 +387,7 @@ public class HomeController {
     public void showStage(Pane root) {
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setResizable(true); // Allow maximize
         stage.setTitle("Home");
         stage.show();
     }

@@ -28,7 +28,7 @@ public class Model {
 		userDao = new UserDaoImpl();
 		cart = new Cart();
 		try {
-			dbConn = Database.getConnection();
+			dbConn = Database.getInstance().getConnection();
 			eventDao = new EventDaoImpl(dbConn);
 			orderDao = new OrderDaoImpl(dbConn, eventDao);
 			// Load initial events from events.dat if database is empty

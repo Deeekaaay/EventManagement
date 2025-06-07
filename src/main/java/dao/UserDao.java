@@ -15,4 +15,7 @@ public interface UserDao {
 
 	// Updated to include preferred name
 	User createUser(String username, String password, String preferredName) throws SQLException;
+
+	// Change password for a user
+	boolean changePassword(String username, String newPassword) throws SQLException;
 }

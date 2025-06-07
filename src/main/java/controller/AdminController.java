@@ -1,6 +1,7 @@
 package controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -35,6 +36,10 @@ public class AdminController {
     @FXML private Button disableEventBtn;
     @FXML private Button viewOrdersBtn;
     @FXML private Label adminMessage;
+    @FXML private MenuBar adminMenuBar;
+    @FXML private Menu adminAccountMenu;
+    @FXML private MenuItem adminChangePasswordMenu;
+    @FXML private MenuItem adminLogoutMenu;
 
     private Event selectedEvent;
 
@@ -70,6 +75,8 @@ public class AdminController {
         enableEventBtn.setOnAction(e -> handleEnableEvent());
         disableEventBtn.setOnAction(e -> handleDisableEvent());
         viewOrdersBtn.setOnAction(e -> handleViewOrders());
+        adminChangePasswordMenu.setOnAction(e -> handleAdminChangePassword());
+        adminLogoutMenu.setOnAction(e -> handleAdminLogout());
     }
 
     private ObservableList<Event> getGroupedEvents() {
@@ -270,6 +277,43 @@ public class AdminController {
         dialog.getDialogPane().setContent(vbox);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
         dialog.showAndWait();
+    }
+
+    private void handleAdminChangePassword() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setHeaderText("Change Password");
+        dialog.setContentText("Enter new password:");
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            String newPassword = result.get().trim();
+            if (newPassword.isEmpty()) {
+                adminMessage.setText("Password cannot be empty.");
+                return;
+            }
+            try {
+                boolean changed = model.getUserDao().changePassword(model.getCurrentUser().getUsername(), newPassword);
+                if (changed) {
+                    adminMessage.setText("Password changed successfully. Please use the new password next time.");
+                } else {
+                    adminMessage.setText("Failed to change password.");
+                }
+            } catch (Exception e) {
+                adminMessage.setText("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    private void handleAdminLogout() {
+        stage.close();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
+            LoginController loginController = new LoginController(new Stage(), model);
+            loader.setController(loginController);
+            Pane root = loader.load();
+            loginController.showStage(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void showStage(Pane root) {

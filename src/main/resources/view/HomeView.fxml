@@ -7,6 +7,14 @@
   <children>
     <MenuBar fx:id="menu" prefHeight="25.0" VBox.vgrow="NEVER">
       <menus>
+        <Menu fx:id="accountMenu" text="Account">
+          <items>
+            <MenuItem fx:id="changePasswordMenu" text="Change Password" />
+            <MenuItem fx:id="viewOrdersMenu" text="View Orders" />
+            <MenuItem fx:id="exportOrdersMenu" text="Export Orders" />
+            <MenuItem fx:id="logoutMenu" text="Logout" />
+          </items>
+        </Menu>
         <Menu fx:id="profile" text="Profile">
           <items>
             <MenuItem fx:id="viewProfile" text="View my profile" />
@@ -38,8 +46,6 @@
       <Button fx:id="removeFromCartBtn" text="Remove from Cart" />
       <Button fx:id="viewCartBtn" text="View Cart" />
       <Button fx:id="checkoutBtn" text="Checkout" />
-      <Button fx:id="viewOrdersBtn" text="View Orders" />
-      <Button fx:id="exportOrdersBtn" text="Export Orders" />
     </HBox>
     <Label fx:id="cartMessage" style="-fx-text-fill: red;" />
   </children>
